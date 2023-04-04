@@ -1,27 +1,27 @@
-FROM ubi8/python-39
+FROM ubi8/python-39:latest
 
 # If the container is not run on a registered RHEL system then use this for the base container:
 #FROM registry.fedoraproject.org/f35/python3
 
-LABEL maintainer="tbrunell@redhat.com"
-USER 0
+LABEL maintainer="cversky@redhat.com"
 
-RUN yum -y install --nodocs opencv-core opencv-contrib  &&\
-    yum clean all -y
+USER root
 
-RUN python3 -m pip install --upgrade pip 
+RUN yum -y --nodocs install opencv-core opencv-contrib  &&\
+    yum clean all -y --quiet --allowerasing
+
+RUN python3 -m pip install --upgrade pip && \
+    pip3 install --no-cache-dir protobuf==3.20.* mediapipe matplotlib flask
+
 WORKDIR /app
-RUN mkdir /app/templates/
-RUN pip3 install protobuf==3.20.*
-RUN pip3 install mediapipe
-RUN pip3 install matplotlib
-RUN pip3 install flask
+
+COPY app.py ./
+COPY HowsMySalute.py ./
+COPY templates/ ./templates/
+COPY graphics/ ./static/graphics/
 
 EXPOSE 8080
 
-COPY app.py /app
-COPY HowsMySalute.py /app
-COPY templates/ /app/templates/
-COPY graphics/ /app/static/graphics/
+USER 1001
 
 CMD ["python3","app.py"]
